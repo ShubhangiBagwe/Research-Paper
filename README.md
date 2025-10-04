@@ -21,9 +21,6 @@ To run this project, you need **Node.js** installed on your machine.
 node -v
 npm -v
 
-
-
-
 ## Run Locally
 add .env file locally 
 
