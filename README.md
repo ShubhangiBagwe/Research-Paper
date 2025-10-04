@@ -29,3 +29,5 @@ NEXT_PUBLIC_BASE_URL = https://easydash.enago.com
 ```bash
 npm install
 npm run dev
+
+Demo : (https://paperresearch.netlify.app/)
