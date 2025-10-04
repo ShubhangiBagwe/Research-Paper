@@ -1,101 +1,143 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useEffect, useState, useMemo } from "react";
+import styles from "./styles/home.module.scss";
+import Modal from "antd/es/modal/Modal";
+import SearchBar from "./components/SearchBar";
+import PaperCard from "./components/PaperCard";
+import Pagination from "./components/Pagination";
+import SkeletonCard from "./components/SkeletonCard";
+import { Empty } from "antd";
+
+interface Paper {
+  id: number;
+  papertitle: string;
+  client?: {
+    firstname?: string;
+    lastname?: string;
+  };
+  coauthors?: string;
+  publisher?: {
+    publishername?: string;
+  };
+  journal?: {
+    title?: string;
+    impactfactor?: number;
+  };
+  articlelink?: string;
+  published_at?: string;
+}
+
+export default function HomePage() {
+  const [papers, setPapers] = useState<Paper[]>([]);
+  const [filtered, setFiltered] = useState<Paper[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedPaper, setSelectedPaper] = useState<Paper | null>(null);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const perPage = 9;
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/acceptedpapers`);
+        const data: Paper[] = await res.json();
+        setPapers(data);
+        setFiltered(data);
+      } catch (err) {
+        console.error("Fetch error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const handleSearch = (query: string, field: string) => {
+    const q = query.toLowerCase();
+    const results = papers.filter((p) => {
+      if (field === "title") return p.papertitle?.toLowerCase().includes(q);
+      if (field === "author")
+        return (
+          p.client?.firstname?.toLowerCase().includes(q) ||
+          p.client?.lastname?.toLowerCase().includes(q) ||
+          p.coauthors?.toLowerCase().includes(q)
+        );
+      if (field === "journal") return p.journal?.title?.toLowerCase().includes(q);
+      return true;
+    });
+    setFiltered(results);
+    setCurrentPage(1);
+  };
+
+  const handleSort = (sortBy: string, order: "asc" | "desc") => {
+    const sorted = [...filtered].sort((a, b) => {
+      let aVal: string | number = "";
+      let bVal: string | number = "";
+
+      switch (sortBy) {
+        case "title":
+          aVal = a.papertitle || "";
+          bVal = b.papertitle || "";
+          break;
+        case "year":
+          aVal = new Date(a.published_at || "").getFullYear();
+          bVal = new Date(b.published_at || "").getFullYear();
+          break;
+        case "impact":
+          aVal = a.journal?.impactfactor || 0;
+          bVal = b.journal?.impactfactor || 0;
+          break;
+      }
+
+      if (order === "asc") return aVal > bVal ? 1 : -1;
+      else return aVal < bVal ? 1 : -1;
+    });
+    setFiltered(sorted);
+  };
+
+  // Pagination slice
+  const paginated = useMemo(() => {
+    const start = (currentPage - 1) * perPage;
+    return filtered.slice(start, start + perPage);
+  }, [filtered, currentPage]);
+
+  if (loading) {
+  // Show multiple skeleton cards in grid layout
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <div className={styles.container}>
+      <SearchBar onSearch={handleSearch} onSort={handleSort} />
+      <div className={styles.grid}>
+        {Array.from({ length: perPage }).map((_, idx) => (
+          <SkeletonCard key={idx} />
+        ))}
+      </div>
+    </div>
+  );
+}
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  return (
+    <div className={styles.container}>
+      <SearchBar onSearch={handleSearch} onSort={handleSort} />
+
+      {paginated.length === 0 ? (
+        <Empty description="No results found" />
+      ) : (
+        <div className={styles.grid}>
+          {paginated.map((paper) => (
+            <PaperCard key={paper.id} paper={paper}/>
+          ))}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      )}
+
+      <Pagination total={filtered.length} perPage={perPage} current={currentPage} onChange={setCurrentPage} />
+
+      {selectedPaper && (
+        <Modal open={!!selectedPaper} onCancel={() => setSelectedPaper(null)} footer={null}>
+          <PaperCard paper={selectedPaper} />
+        </Modal>
+      )}
     </div>
   );
 }
