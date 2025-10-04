@@ -30,4 +30,4 @@ NEXT_PUBLIC_BASE_URL = https://easydash.enago.com
 npm install
 npm run dev
 
-Live Demo : [https://paperresearch.netlify.app](https://paperresearch.netlify.app)
+[Live Demo](https://paperresearch.netlify.app)
