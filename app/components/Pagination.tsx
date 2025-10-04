@@ -1,13 +1,7 @@
 "use client";
 
 import React from "react";
-
-interface PaginationProps {
-  total: number;         
-  perPage: number;        
-  current: number;       
-  onChange: (page: number) => void; 
-}
+import { PaginationProps } from "../type/main";
 
 const Pagination: React.FC<PaginationProps> = ({ total, perPage, current, onChange }) => {
   const totalPages = Math.ceil(total / perPage);

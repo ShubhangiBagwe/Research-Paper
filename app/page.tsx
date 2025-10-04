@@ -8,25 +8,7 @@ import PaperCard from "./components/PaperCard";
 import Pagination from "./components/Pagination";
 import SkeletonCard from "./components/SkeletonCard";
 import { Empty } from "antd";
-
-interface Paper {
-  id: number;
-  papertitle: string;
-  client?: {
-    firstname?: string;
-    lastname?: string;
-  };
-  coauthors?: string;
-  publisher?: {
-    publishername?: string;
-  };
-  journal?: {
-    title?: string;
-    impactfactor?: number;
-  };
-  articlelink?: string;
-  published_at?: string;
-}
+import { Paper } from "./type/main";
 
 export default function HomePage() {
   const [papers, setPapers] = useState<Paper[]>([]);

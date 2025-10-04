@@ -2,13 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import { Input, Select, Space } from "antd";
+import { SearchBarProps } from "../type/main";
 
 const { Option } = Select;
-
-interface SearchBarProps {
-  onSearch: (query: string, field: "title" | "author" | "journal") => void;
-  onSort: (sortBy: "title" | "year" | "impact", order: "asc" | "desc") => void;
-}
 
 const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onSort }) => {
   const [query, setQuery] = useState("");

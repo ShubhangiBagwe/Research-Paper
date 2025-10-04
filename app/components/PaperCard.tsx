@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import styles from "../styles/card.module.scss";
 import { Button } from "antd";
 import DetailsModal from "./DetailsModel";
+import Image from "next/image";
 
 
 interface Client {
@@ -40,9 +41,11 @@ const PaperCard: React.FC<PaperCardProps> = ({ paper }) => {
         <div className="flex flex-col gap-5">
           <div className={styles.imageBox}>
             {journal?.journalimage?.url ? (
-              <img
+              <Image
                 src={`${process.env.NEXT_PUBLIC_BASE_URL}${journal.journalimage.url}`}
                 alt={journal?.title || "Journal Image"}
+                width={200}
+                height={200}
               />
             ) : (
               <div className={styles.placeholder}>No Image</div>
