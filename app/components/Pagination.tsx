@@ -10,10 +10,10 @@ const Pagination: React.FC<PaginationProps> = React.memo(({ total, perPage, curr
   const handlePrev = () => {
     if (current > 1) onChange(current - 1);
   };
+
   const handleNext = () => {
     if (current < totalPages) onChange(current + 1);
   };
-
 
   return (
     <div style={{ display: "flex", justifyContent: "center", gap: "8px", margin: "30px" }}>
@@ -41,5 +41,5 @@ const Pagination: React.FC<PaginationProps> = React.memo(({ total, perPage, curr
   );
 });
 
-
+Pagination.displayName = "Pagination";
 export default Pagination;
