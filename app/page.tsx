@@ -20,6 +20,7 @@ export default function HomePage() {
   const [currentPage, setCurrentPage] = useState(1);
   const perPage = 9;
 
+  // Fetch data on mount
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -36,6 +37,7 @@ export default function HomePage() {
     fetchData();
   }, []);
 
+  // Handle search
   const handleSearch = (query: string, field: string) => {
     const q = query.toLowerCase();
     const results = papers.filter((p) => {
@@ -49,10 +51,16 @@ export default function HomePage() {
       if (field === "journal") return p.journal?.title?.toLowerCase().includes(q);
       return true;
     });
+
     setFiltered(results);
-    setCurrentPage(1);
+
+    // ✅ Only reset page if current page goes out of range
+    if ((currentPage - 1) * perPage >= results.length) {
+      setCurrentPage(1);
+    }
   };
 
+  // Handle sort
   const handleSort = (sortBy: string, order: "asc" | "desc") => {
     const sorted = [...filtered].sort((a, b) => {
       let aVal: string | number = "";
@@ -76,28 +84,35 @@ export default function HomePage() {
       if (order === "asc") return aVal > bVal ? 1 : -1;
       else return aVal < bVal ? 1 : -1;
     });
+
     setFiltered(sorted);
+    // ✅ Keep current page instead of resetting every time
   };
 
-  // Pagination slice
+  // Paginated data
   const paginated = useMemo(() => {
     const start = (currentPage - 1) * perPage;
     return filtered.slice(start, start + perPage);
   }, [filtered, currentPage]);
 
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  // Loading skeletons
   if (loading) {
-  // Show multiple skeleton cards in grid layout
-  return (
-    <div className={styles.container}>
-      <SearchBar onSearch={handleSearch} onSort={handleSort} />
-      <div className={styles.grid}>
-        {Array.from({ length: perPage }).map((_, idx) => (
-          <SkeletonCard key={idx} />
-        ))}
+    return (
+      <div className={styles.container}>
+        <SearchBar onSearch={handleSearch} onSort={handleSort} />
+        <div className={styles.grid}>
+          {Array.from({ length: perPage }).map((_, idx) => (
+            <SkeletonCard key={idx} />
+          ))}
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
   return (
     <div className={styles.container}>
@@ -108,15 +123,24 @@ export default function HomePage() {
       ) : (
         <div className={styles.grid}>
           {paginated.map((paper) => (
-            <PaperCard key={paper.id} paper={paper}/>
+            <PaperCard key={paper.id} paper={paper} />
           ))}
         </div>
       )}
 
-      <Pagination total={filtered.length} perPage={perPage} current={currentPage} onChange={setCurrentPage} />
+      <Pagination
+        total={filtered.length}
+        perPage={perPage}
+        current={currentPage}
+        onChange={handlePageChange}
+      />
 
       {selectedPaper && (
-        <Modal open={!!selectedPaper} onCancel={() => setSelectedPaper(null)} footer={null}>
+        <Modal
+          open={!!selectedPaper}
+          onCancel={() => setSelectedPaper(null)}
+          footer={null}
+        >
           <PaperCard paper={selectedPaper} />
         </Modal>
       )}
